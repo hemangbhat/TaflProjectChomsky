@@ -343,65 +343,257 @@ export default function DetailPanel({ language, onClose, isDark }) {
                     {language.machineDescription}
                   </p>
 
-                  {/* Machine visualization */}
+                  {/* Machine visualization - specific per automaton type */}
                   <div className={cn(
                     "p-6 rounded-2xl border relative overflow-hidden",
                     isDark ? "bg-black/30 border-white/10" : "bg-gray-50 border-gray-200"
                   )}>
-                    <div className="flex items-center justify-center gap-4">
-                      {/* States representation */}
-                      {[1, 2, 3].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.2 + i * 0.1, type: "spring" }}
-                          className="flex flex-col items-center gap-2"
-                        >
-                          <motion.div
-                            animate={{
-                              boxShadow: i === 1 ? [
-                                `0 0 0 0 transparent`,
-                                `0 0 20px 5px ${style.glow.replace('0 0 80px ', '')}`,
-                                `0 0 0 0 transparent`,
-                              ] : 'none',
-                            }}
-                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
-                            className={cn(
-                              "w-14 h-14 rounded-full flex items-center justify-center font-bold text-sm border-2",
-                              i === 1 ? cn(style.border, style.text) : isDark ? "border-white/20 text-gray-400" : "border-gray-300 text-gray-500"
-                            )}
-                          >
-                            q{i}
-                          </motion.div>
-                          <span className={cn("text-xs", isDark ? "text-gray-500" : "text-gray-400")}>
-                            {i === 0 ? 'Start' : i === 2 ? 'Accept' : 'State'}
-                          </span>
-                        </motion.div>
-                      ))}
-                    </div>
+                    {language.id === 'regular' && (
+                      /* ── Finite Automaton: 4 states, labeled transitions, self-loop ── */
+                      <div className="flex flex-col items-center gap-4">
+                        <svg viewBox="0 0 480 160" className="w-full max-w-lg" style={{ overflow: 'visible' }}>
+                          <defs>
+                            <marker id="arrowFA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                              <path d="M 0 0 L 10 5 L 0 10 z" fill={isDark ? '#9ca3af' : '#6b7280'} />
+                            </marker>
+                            <marker id="arrowFAColor" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                              <path d="M 0 0 L 10 5 L 0 10 z" fill="#22c55e" />
+                            </marker>
+                          </defs>
+                          {/* Start arrow */}
+                          <motion.line x1="10" y1="80" x2="48" y2="80" stroke={isDark ? '#9ca3af' : '#6b7280'} strokeWidth="2" markerEnd="url(#arrowFA)" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.5 }} />
+                          {/* States */}
+                          {[
+                            { x: 70, label: 'q₀', sub: 'Start' },
+                            { x: 180, label: 'q₁', sub: '' },
+                            { x: 290, label: 'q₂', sub: '' },
+                            { x: 400, label: 'q₃', sub: 'Accept', accept: true },
+                          ].map((s, i) => (
+                            <g key={i}>
+                              <motion.circle cx={s.x} cy={80} r={24} fill="none" stroke={s.accept ? '#22c55e' : (isDark ? '#6b7280' : '#9ca3af')} strokeWidth={2} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2 + i * 0.12, type: 'spring' }} />
+                              {s.accept && <motion.circle cx={s.x} cy={80} r={20} fill="none" stroke="#22c55e" strokeWidth={1.5} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5 }} />}
+                              <text x={s.x} y={84} textAnchor="middle" fill={s.accept ? '#22c55e' : (isDark ? '#d1d5db' : '#374151')} fontSize={13} fontWeight={600} fontFamily="Inter, system-ui">{s.label}</text>
+                              {s.sub && <text x={s.x} y={118} textAnchor="middle" fill={isDark ? '#6b7280' : '#9ca3af'} fontSize={10} fontFamily="Inter, system-ui">{s.sub}</text>}
+                            </g>
+                          ))}
+                          {/* Transitions */}
+                          {[
+                            { x1: 94, x2: 156, label: 'a' },
+                            { x1: 204, x2: 266, label: 'b' },
+                            { x1: 314, x2: 376, label: 'c' },
+                          ].map((t, i) => (
+                            <g key={`t-${i}`}>
+                              <motion.line x1={t.x1} y1={80} x2={t.x2} y2={80} stroke={isDark ? '#6b7280' : '#9ca3af'} strokeWidth={1.5} markerEnd="url(#arrowFA)" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.6 + i * 0.15, duration: 0.5 }} />
+                              <text x={(t.x1 + t.x2) / 2} y={68} textAnchor="middle" fill="#22c55e" fontSize={12} fontWeight={700} fontFamily="monospace">{t.label}</text>
+                            </g>
+                          ))}
+                          {/* Self-loop on q1 */}
+                          <motion.path d="M 172 56 C 160 20 200 20 188 56" fill="none" stroke={isDark ? '#6b7280' : '#9ca3af'} strokeWidth={1.5} markerEnd="url(#arrowFA)" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 1, duration: 0.5 }} />
+                          <text x={180} y={28} textAnchor="middle" fill="#22c55e" fontSize={11} fontWeight={700} fontFamily="monospace">a,b</text>
+                          {/* Animated traversal dot */}
+                          <motion.circle r={4} fill="#22c55e" animate={{ cx: [70, 180, 290, 400], cy: [80, 80, 80, 80], opacity: [1, 1, 1, 0] }} transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 2, ease: 'easeInOut' }} />
+                        </svg>
+                        <p className={cn("text-xs text-center", isDark ? "text-gray-500" : "text-gray-400")}>Finite Automaton — transitions depend only on current state and input symbol</p>
+                      </div>
+                    )}
 
-                    {/* Animated transitions */}
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ top: '30%' }}>
-                      <motion.path
-                        d="M 80 30 Q 120 0 160 30"
-                        fill="none"
-                        stroke={isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)"}
-                        strokeWidth="2"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        transition={{ duration: 1, delay: 0.5 }}
-                      />
-                      <motion.path
-                        d="M 180 30 Q 220 0 260 30"
-                        fill="none"
-                        stroke={isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)"}
-                        strokeWidth="2"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        transition={{ duration: 1, delay: 0.7 }}
-                      />
-                    </svg>
+                    {language.id === 'context-free' && (
+                      /* ── Pushdown Automaton: states + stack ── */
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="flex items-start gap-8 justify-center flex-wrap">
+                          {/* State diagram */}
+                          <svg viewBox="0 0 320 160" className="w-full max-w-xs" style={{ overflow: 'visible' }}>
+                            <defs>
+                              <marker id="arrowPDA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill={isDark ? '#9ca3af' : '#6b7280'} />
+                              </marker>
+                            </defs>
+                            <motion.line x1="10" y1="80" x2="48" y2="80" stroke={isDark ? '#9ca3af' : '#6b7280'} strokeWidth="2" markerEnd="url(#arrowPDA)" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.4 }} />
+                            {[
+                              { x: 70, label: 'q₀', sub: 'Start' },
+                              { x: 160, label: 'q₁', sub: 'Read/Push' },
+                              { x: 250, label: 'q₂', sub: 'Accept', accept: true },
+                            ].map((s, i) => (
+                              <g key={i}>
+                                <motion.circle cx={s.x} cy={80} r={24} fill="none" stroke={s.accept ? '#3b82f6' : (isDark ? '#6b7280' : '#9ca3af')} strokeWidth={2} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2 + i * 0.12, type: 'spring' }} />
+                                {s.accept && <motion.circle cx={s.x} cy={80} r={20} fill="none" stroke="#3b82f6" strokeWidth={1.5} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5 }} />}
+                                <text x={s.x} y={84} textAnchor="middle" fill={s.accept ? '#3b82f6' : (isDark ? '#d1d5db' : '#374151')} fontSize={13} fontWeight={600} fontFamily="Inter, system-ui">{s.label}</text>
+                                <text x={s.x} y={118} textAnchor="middle" fill={isDark ? '#6b7280' : '#9ca3af'} fontSize={9} fontFamily="Inter, system-ui">{s.sub}</text>
+                              </g>
+                            ))}
+                            <motion.line x1={94} y1={80} x2={136} y2={80} stroke={isDark ? '#6b7280' : '#9ca3af'} strokeWidth={1.5} markerEnd="url(#arrowPDA)" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.5 }} />
+                            <text x={115} y={70} textAnchor="middle" fill="#3b82f6" fontSize={11} fontWeight={700} fontFamily="monospace">a, ε→A</text>
+                            <motion.line x1={184} y1={80} x2={226} y2={80} stroke={isDark ? '#6b7280' : '#9ca3af'} strokeWidth={1.5} markerEnd="url(#arrowPDA)" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.65 }} />
+                            <text x={205} y={70} textAnchor="middle" fill="#3b82f6" fontSize={11} fontWeight={700} fontFamily="monospace">b, A→ε</text>
+                            {/* Self-loop */}
+                            <motion.path d="M 152 56 C 140 20 180 20 168 56" fill="none" stroke={isDark ? '#6b7280' : '#9ca3af'} strokeWidth={1.5} markerEnd="url(#arrowPDA)" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.8 }} />
+                            <text x={160} y={26} textAnchor="middle" fill="#3b82f6" fontSize={10} fontWeight={700} fontFamily="monospace">a, A→AA</text>
+                          </svg>
+                          {/* Stack visualization */}
+                          <div className="flex flex-col items-center gap-2">
+                            <span className={cn("text-xs font-semibold uppercase tracking-wider mb-1", isDark ? "text-gray-400" : "text-gray-500")}>Stack (LIFO)</span>
+                            <div className={cn("w-20 border-2 rounded-lg overflow-hidden", isDark ? "border-blue-500/40" : "border-blue-300")}>
+                              {['A', 'A', 'A', '$'].map((item, i) => (
+                                <motion.div
+                                  key={i}
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: 0.8 + i * 0.15 }}
+                                  className={cn(
+                                    "px-3 py-2 text-center text-sm font-mono font-bold border-b",
+                                    isDark ? "border-white/10" : "border-gray-200",
+                                    i === 0 ? (isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700") : (isDark ? "bg-white/5 text-gray-400" : "bg-gray-50 text-gray-600")
+                                  )}
+                                >
+                                  {item}
+                                </motion.div>
+                              ))}
+                            </div>
+                            <motion.span
+                              animate={{ y: [0, -4, 0] }}
+                              transition={{ duration: 1.5, repeat: Infinity }}
+                              className={cn("text-[10px] mt-1", isDark ? "text-gray-500" : "text-gray-400")}
+                            >
+                              ↑ Top
+                            </motion.span>
+                          </div>
+                        </div>
+                        <p className={cn("text-xs text-center", isDark ? "text-gray-500" : "text-gray-400")}>Pushdown Automaton — FA augmented with an infinite stack for nested structures</p>
+                      </div>
+                    )}
+
+                    {language.id === 'context-sensitive' && (
+                      /* ── Linear Bounded Automaton: states + bounded tape ── */
+                      <div className="flex flex-col items-center gap-4">
+                        {/* Bounded tape */}
+                        <div className="flex flex-col items-center gap-3">
+                          <span className={cn("text-xs font-semibold uppercase tracking-wider", isDark ? "text-gray-400" : "text-gray-500")}>Bounded Tape (input length)</span>
+                          <div className="flex items-center gap-0">
+                            {/* Left boundary */}
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={cn("w-2 h-12 rounded-l-lg", isDark ? "bg-orange-500/40" : "bg-orange-300")} />
+                            {['a', 'a', 'b', 'b', 'c', 'c'].map((cell, i) => (
+                              <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 + i * 0.08 }}
+                                className={cn(
+                                  "w-12 h-12 flex items-center justify-center font-mono font-bold text-lg border",
+                                  isDark ? "border-white/10" : "border-gray-300",
+                                  i === 2 ? (isDark ? "bg-orange-500/20 text-orange-400 border-orange-500/50" : "bg-orange-100 text-orange-700 border-orange-400") : (isDark ? "bg-white/5 text-gray-300" : "bg-white text-gray-700")
+                                )}
+                              >
+                                {cell}
+                              </motion.div>
+                            ))}
+                            {/* Right boundary */}
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={cn("w-2 h-12 rounded-r-lg", isDark ? "bg-orange-500/40" : "bg-orange-300")} />
+                          </div>
+                          {/* Read/write head */}
+                          <motion.div
+                            animate={{ x: [-60, -12, 36, -12, -60] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                            className="flex flex-col items-center"
+                          >
+                            <div className={cn("w-0 h-0 border-l-[8px] border-r-[8px] border-b-[10px] border-l-transparent border-r-transparent", isDark ? "border-b-orange-400" : "border-b-orange-500")} />
+                            <span className={cn("text-[10px] font-bold mt-1", isDark ? "text-orange-400" : "text-orange-600")}>R/W Head</span>
+                          </motion.div>
+                        </div>
+                        {/* State diagram mini */}
+                        <svg viewBox="0 0 260 80" className="w-full max-w-xs" style={{ overflow: 'visible' }}>
+                          <defs>
+                            <marker id="arrowLBA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                              <path d="M 0 0 L 10 5 L 0 10 z" fill={isDark ? '#9ca3af' : '#6b7280'} />
+                            </marker>
+                          </defs>
+                          {[
+                            { x: 40, label: 'q₀' },
+                            { x: 130, label: 'q₁' },
+                            { x: 220, label: 'q₂', accept: true },
+                          ].map((s, i) => (
+                            <g key={i}>
+                              <motion.circle cx={s.x} cy={40} r={20} fill="none" stroke={s.accept ? '#f97316' : (isDark ? '#6b7280' : '#9ca3af')} strokeWidth={1.5} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.8 + i * 0.1, type: 'spring' }} />
+                              {s.accept && <circle cx={s.x} cy={40} r={16} fill="none" stroke="#f97316" strokeWidth={1} />}
+                              <text x={s.x} y={44} textAnchor="middle" fill={s.accept ? '#f97316' : (isDark ? '#d1d5db' : '#374151')} fontSize={12} fontWeight={600} fontFamily="Inter, system-ui">{s.label}</text>
+                            </g>
+                          ))}
+                          <motion.line x1={60} y1={40} x2={110} y2={40} stroke={isDark ? '#6b7280' : '#9ca3af'} strokeWidth={1.5} markerEnd="url(#arrowLBA)" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 1.1 }} />
+                          <motion.line x1={150} y1={40} x2={200} y2={40} stroke={isDark ? '#6b7280' : '#9ca3af'} strokeWidth={1.5} markerEnd="url(#arrowLBA)" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 1.2 }} />
+                        </svg>
+                        <p className={cn("text-xs text-center", isDark ? "text-gray-500" : "text-gray-400")}>Linear Bounded Automaton — Turing Machine with tape restricted to input length</p>
+                      </div>
+                    )}
+
+                    {language.id === 'recursively-enumerable' && (
+                      /* ── Turing Machine: states + infinite tape + R/W head ── */
+                      <div className="flex flex-col items-center gap-4">
+                        {/* Infinite tape */}
+                        <div className="flex flex-col items-center gap-3">
+                          <span className={cn("text-xs font-semibold uppercase tracking-wider", isDark ? "text-gray-400" : "text-gray-500")}>Infinite Tape</span>
+                          <div className="flex items-center gap-0">
+                            <span className={cn("text-lg mx-1 font-mono", isDark ? "text-gray-600" : "text-gray-400")}>···</span>
+                            {['B', '1', '0', '1', '1', '0', 'B', 'B'].map((cell, i) => (
+                              <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 + i * 0.06 }}
+                                className={cn(
+                                  "w-10 h-12 flex items-center justify-center font-mono font-bold text-sm border",
+                                  isDark ? "border-white/10" : "border-gray-300",
+                                  i === 3 ? (isDark ? "bg-red-500/20 text-red-400 border-red-500/50" : "bg-red-100 text-red-700 border-red-400") :
+                                  cell === 'B' ? (isDark ? "bg-white/[0.02] text-gray-600" : "bg-gray-100 text-gray-400") :
+                                  (isDark ? "bg-white/5 text-gray-300" : "bg-white text-gray-700")
+                                )}
+                              >
+                                {cell}
+                              </motion.div>
+                            ))}
+                            <span className={cn("text-lg mx-1 font-mono", isDark ? "text-gray-600" : "text-gray-400")}>···</span>
+                          </div>
+                          {/* Read/write head */}
+                          <motion.div
+                            animate={{ x: [-40, 0, 40, 0, -40] }}
+                            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                            className="flex flex-col items-center"
+                          >
+                            <div className={cn("w-0 h-0 border-l-[8px] border-r-[8px] border-b-[10px] border-l-transparent border-r-transparent", isDark ? "border-b-red-400" : "border-b-red-500")} />
+                            <span className={cn("text-[10px] font-bold mt-1", isDark ? "text-red-400" : "text-red-600")}>R/W Head</span>
+                          </motion.div>
+                        </div>
+                        {/* State diagram */}
+                        <svg viewBox="0 0 360 90" className="w-full max-w-sm" style={{ overflow: 'visible' }}>
+                          <defs>
+                            <marker id="arrowTM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                              <path d="M 0 0 L 10 5 L 0 10 z" fill={isDark ? '#9ca3af' : '#6b7280'} />
+                            </marker>
+                          </defs>
+                          {[
+                            { x: 40, label: 'q₀' },
+                            { x: 120, label: 'q₁' },
+                            { x: 200, label: 'q₂' },
+                            { x: 280, label: 'qₐ', accept: true },
+                            { x: 280, cy: 75, label: 'qᵣ', reject: true },
+                          ].map((s, i) => (
+                            <g key={i}>
+                              <motion.circle cx={s.x} cy={s.cy || 35} r={18} fill="none" stroke={s.accept ? '#22c55e' : s.reject ? '#ef4444' : (isDark ? '#6b7280' : '#9ca3af')} strokeWidth={1.5} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.6 + i * 0.1, type: 'spring' }} />
+                              {s.accept && <circle cx={s.x} cy={35} r={14} fill="none" stroke="#22c55e" strokeWidth={1} />}
+                              <text x={s.x} y={(s.cy || 35) + 4} textAnchor="middle" fill={s.accept ? '#22c55e' : s.reject ? '#ef4444' : (isDark ? '#d1d5db' : '#374151')} fontSize={11} fontWeight={600} fontFamily="Inter, system-ui">{s.label}</text>
+                            </g>
+                          ))}
+                          {/* Transitions */}
+                          <motion.line x1={58} y1={35} x2={102} y2={35} stroke={isDark ? '#6b7280' : '#9ca3af'} strokeWidth={1.5} markerEnd="url(#arrowTM)" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 1.1 }} />
+                          <text x={80} y={26} textAnchor="middle" fill="#ef4444" fontSize={9} fontWeight={700} fontFamily="monospace">1→X,R</text>
+                          <motion.line x1={138} y1={35} x2={182} y2={35} stroke={isDark ? '#6b7280' : '#9ca3af'} strokeWidth={1.5} markerEnd="url(#arrowTM)" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 1.2 }} />
+                          <text x={160} y={26} textAnchor="middle" fill="#ef4444" fontSize={9} fontWeight={700} fontFamily="monospace">0→Y,R</text>
+                          <motion.line x1={218} y1={35} x2={262} y2={35} stroke={isDark ? '#6b7280' : '#9ca3af'} strokeWidth={1.5} markerEnd="url(#arrowTM)" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 1.3 }} />
+                          <text x={240} y={26} textAnchor="middle" fill="#22c55e" fontSize={9} fontWeight={700} fontFamily="monospace">B→B,R</text>
+                          {/* Reject branch */}
+                          <motion.line x1={218} y1={50} x2={262} y2={70} stroke={isDark ? '#6b7280' : '#9ca3af'} strokeWidth={1.5} markerEnd="url(#arrowTM)" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 1.4 }} />
+                        </svg>
+                        <p className={cn("text-xs text-center", isDark ? "text-gray-500" : "text-gray-400")}>Turing Machine — infinite tape, read/write head, can simulate any algorithm</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-6 flex flex-wrap gap-2">

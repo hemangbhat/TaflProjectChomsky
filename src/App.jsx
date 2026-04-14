@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, BookOpen, HelpCircle, Sparkles } from 'lucide-react';
+import { Layers, BookOpen, HelpCircle, Sparkles, Target } from 'lucide-react';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import Navbar from './components/Navbar';
 import BackgroundEffects from './components/BackgroundEffects';
 import Hero from './components/Hero';
 import HierarchyDiagram from './components/HierarchyDiagram';
+import VennDiagram from './components/VennDiagram';
 import DetailPanel from './components/DetailPanel';
 import ComparisonTable from './components/ComparisonTable';
 import Quiz from './components/Quiz';
@@ -114,6 +115,25 @@ function App() {
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
+          </motion.section>
+
+          {/* Venn Diagram Section */}
+          <motion.section
+            id="venn"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, margin: "-20%" }}
+            transition={{ duration: 0.8 }}
+            className="relative py-32 px-4 sm:px-6 lg:px-8"
+          >
+            <div className="max-w-5xl mx-auto">
+              <SectionHeader icon={Target} title="Set Relationships" color="purple" isDark={isDark} />
+              <VennDiagram
+                onSelect={handleSelectLanguage}
+                selectedId={selectedLanguage}
+                isDark={isDark}
+              />
             </div>
           </motion.section>
 

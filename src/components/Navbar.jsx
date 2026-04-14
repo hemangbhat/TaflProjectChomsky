@@ -18,7 +18,7 @@ export default function Navbar({ isDark, toggleTheme }) {
       setIsScrolled(window.scrollY > 50);
       
       // Detect active section
-      const sections = ['hierarchy', 'comparison', 'quiz'];
+      const sections = ['hierarchy', 'venn', 'comparison', 'quiz'];
       for (const section of sections) {
         const element = document.getElementById(section);
         if (element) {
@@ -36,6 +36,7 @@ export default function Navbar({ isDark, toggleTheme }) {
 
   const navLinks = [
     { name: 'Hierarchy', href: '#hierarchy', id: 'hierarchy' },
+    { name: 'Venn', href: '#venn', id: 'venn' },
     { name: 'Comparison', href: '#comparison', id: 'comparison' },
     { name: 'Quiz', href: '#quiz', id: 'quiz' },
   ];

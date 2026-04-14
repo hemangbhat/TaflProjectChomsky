@@ -7,7 +7,16 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-export default function Quiz({ questions, isDark }) {
+export default function Quiz({ questions: allQuestions, isDark }) {
+  const QUIZ_SIZE = 8;
+
+  // Shuffle and pick subset of questions
+  const shuffleAndPick = useCallback(() => {
+    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, Math.min(QUIZ_SIZE, shuffled.length));
+  }, [allQuestions]);
+
+  const [questions, setQuestions] = useState(() => shuffleAndPick());
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showResult, setShowResult] = useState(false);
@@ -54,6 +63,7 @@ export default function Quiz({ questions, isDark }) {
   }, [currentQuestion, questions.length]);
 
   const handleRestart = useCallback(() => {
+    setQuestions(shuffleAndPick());
     setCurrentQuestion(0);
     setSelectedAnswer(null);
     setShowResult(false);
@@ -61,7 +71,7 @@ export default function Quiz({ questions, isDark }) {
     setIsComplete(false);
     setAnswers([]);
     setStreak(0);
-  }, []);
+  }, [shuffleAndPick]);
 
   if (isComplete) {
     const percentage = Math.round((score / questions.length) * 100);
@@ -213,8 +223,11 @@ export default function Quiz({ questions, isDark }) {
                 className="px-10 py-6 text-lg rounded-2xl"
               >
                 <RotateCcw className="w-5 h-5 mr-2" />
-                Try Again
+                Try Again with New Questions
               </Button>
+              <p className={cn("mt-4 text-xs", isDark ? "text-gray-500" : "text-gray-400")}>
+                {allQuestions.length} questions in pool — each attempt selects {QUIZ_SIZE} random questions
+              </p>
             </motion.div>
           </CardContent>
         </Card>
